@@ -1,3 +1,15 @@
+################################################################################
+#
+# Title: Dynamic variables in pelagic ecosystems
+# Course: Using R to work with marine spatial data
+#
+# Author: David March
+# Email: dmarch@ub.edu
+# Last revision: 2021/04/29
+#
+# Keywords: R, marine, data, GIS, map, raster, netCDF
+#
+################################################################################
 
 
 library(lubridate)
@@ -34,16 +46,6 @@ sst_mean <- mean(s)
 sst_sd <- calc(s, sd)
 
 
-
-# Exercise
-# derive a new metric: temperature gradient
-# temperature gradient can be defined using the slope previously
-
-
-# Exercise
-# download a NPP product
-
-
 # transform time series from raster
 time <- getZ(s)
 time <- as.POSIXct(time*60, origin = "1900-01-01", tz = "UTC") 
@@ -75,3 +77,12 @@ extractTSR <- function(x, y, t){
 # extract data from Time Series Raster
 data$sst <- extractTSR(x = s, y = cbind(data$lon, data$lat), t = data$day)
 plot(data$date, data$sst, type="l")
+
+
+# Exercise 1
+# derive a new metric: temperature gradient
+# temperature gradient can be defined using the slope previously
+
+
+# Exercise 2
+# download a NPP product and extract the information along the track

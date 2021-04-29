@@ -9,9 +9,6 @@
 #
 # Keywords: R, marine, data, GIS, map, raster, bathymetry, terrain
 #
-# Copyright 2016 SOCIB
-# The script is distributed under the terms of the GNUv3 General Public License
-#
 ################################################################################
 
 # load libraries
@@ -75,13 +72,51 @@ slope <- terrain(bat, opt=c("slope"), unit='degrees')
 # transform 0 to NA
 bat[bat == 0] <- NA
 
-# transform positive values to negative
-bat_neg <- bat * (-1)
+# resample to a coarser resolution (0.042 x 0.042 degrees)
+bathy_ag <- aggregate(bat, fact = 20, fun = mean)
+
+# prepare raster to calculate distance
+bathy_d <- bathy_ag
+bathy_d[is.na(bathy_d[])] <- 10000 
+bathy_d[bathy_d < 10000] <- NA 
+
+# distance
+dist2coast <- distance(bathy_d)  # calculate distance
+dist2coast <- dist2coast / 1000  # convert to km
+dist2coast[dist2coast == 0] <- NA  # set 0 values to NA
+plot(dist2coast)
+
+
+
+#---------------------------------------------------------------
+# Part 4: Distance metrics: distance to colony
+#---------------------------------------------------------------
+
+library(gdistance)
+
+# Colony location
+CalaMorell <- c(3.86877, 40.055872)
+
+# create ocean mask using the bathymetry
+mask <- bat/bat
+
+# change to a coarser resolution
+mask_ag <- aggregate(mask, fact = 10)
+
+# create surface
+tr1 <- transition(mask_ag, transitionFunction=mean, directions=16)
+tr1C <- geoCorrection(tr1)
+
+# calculate distance to colony
+dist2col <- accCost(tr1C, CalaMorell)
+dist2col[is.infinite(dist2col)] <- NA
+plot(dist2col)
+
 
 
 
 #----------------------------------------------
-# Part 3: Export raster data
+# Part 5: Export raster data
 #----------------------------------------------
 
 # create output directory
@@ -92,13 +127,12 @@ if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 writeRaster(slope, filename="output/slope.grd", overwrite=TRUE)  # save binary file for slope
 writeRaster(slope, filename="output/slope.tif", overwrite=TRUE)  # save binary file for slope
 writeRaster(slope, filename="output/slope.nc", overwrite=TRUE)  # save binary file for slope
-
 KML(bat, "output/bat.kml", col = myPal(100), overwrite = TRUE)  # save KML file for bathymetry
 
 
 
 #----------------------------------------------
-# Part 4: Extract raster data for animal track
+# Part 6: Extract raster data for animal track
 #----------------------------------------------
 
 # import tracking data
@@ -111,5 +145,7 @@ head(data$depth)
 summary(data$depth)
 hist(data$depth)
 
-# Exercise: Extract slope
+# Exercise:
+# - Extract slope and other metrics
+# - Plot time series of extracted variables
 
